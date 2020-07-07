@@ -9,10 +9,10 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
     </head>
     <body>
-        <h1>Danh sách tác giả</h1>
+        <h1>Danh sách thể loại truyện</h1>
         <ul>
-            @foreach($authors as $author)
-                <li>{{  $author->name }}</li>
+            @foreach($comicTypes as $comicType)
+                <li>{{ $comicType->name }}</li>
             @endforeach
         </ul>
     </body>

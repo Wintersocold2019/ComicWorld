@@ -13,4 +13,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/', 'PageController@getComicTypes');
+
 Route::get('/{rootUrl}',  'ScraperController@getData');
