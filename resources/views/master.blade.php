@@ -10,10 +10,5 @@
     </head>
     <body>
         <h1>Danh sách thể loại truyện</h1>
-        <ul>
-            @foreach($comicTypes as $comicType)
-                <li>{{ $comicType->name }}</li>
-            @endforeach
-        </ul>
     </body>
 </html>
