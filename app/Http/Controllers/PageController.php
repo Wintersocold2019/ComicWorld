@@ -12,4 +12,8 @@ class PageController extends Controller
 
         return view('master', compact('comicTypes'));
     }
+
+    public function toAdmin() {
+        return view('admin');
+    }
 }

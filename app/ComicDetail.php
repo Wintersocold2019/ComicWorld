@@ -27,9 +27,17 @@ class ComicDetail extends Model
     public function add($comicId, $comicTypeId) {
         if (!$this->checkExist($comicId, $comicTypeId)) {
             $comicDetail = new ComicDetail;
-        $comicDetail->comics_id = $comicId;
-        $comicDetail->comic_types_id = $comicTypeId;
-        $comicDetail->save();
+            $comicDetail->comics_id = $comicId;
+            $comicDetail->comic_types_id = $comicTypeId;
+            $comicDetail->save();
+        }
+    }
+
+    public static function deleteAll() {
+        $dataInTable = ComicDetail::all();
+
+        foreach($dataInTable as $dataRow) {
+
         }
     }
 }

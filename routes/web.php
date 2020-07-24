@@ -15,4 +15,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', 'PageController@getComicTypes');
 
+Route::prefix('/admin')->group(function() {
+        Route::get('/', 'PageController@toAdmin');
+        Route::get('/delete-all', 'AdminController@deleteData')->name('admin.delete-all');
+    }
+);
+
 Route::get('/{rootUrl}',  'ScraperController@getData');

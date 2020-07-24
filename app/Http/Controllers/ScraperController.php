@@ -58,82 +58,97 @@ class ScraperController extends Controller
         $comicTypeList = ComicTypes::all();
 
         foreach($comicTypeList as $comicTypeItem) {
-            $dom       = $this->execute('https://' . $url . '/the-loai' . $comicTypeItem->href);
-            $comicList = $dom->find('.title');
-
-            foreach($comicList as $comicItem) {
-                $comicDom      = $this->execute('https://' . $url . $comicItem->href);
-                $index         = null;
-                
-                $title       = $comicDom->find('h1.title')[0]->plaintext;         
-                $img         = $comicDom->find('.cover img')[0]->src;
-                $authorName  = trim(str_replace('Tác giả:', '',$comicDom->find('a.list-group-item')[0]->plaintext));
-                $comic_type = $comicDom->find('.list-group-item a span');      
-                
-                $sourceValue = $comicDom->find('span[itemprop=isBasedOnUrl]');
-                $source      = $sourceValue !== [] ? $sourceValue[0]->plaintext : ''; 
-
-                $statusTypeName = $comicDom->find('.stt span')[0]->plaintext;
-
-                $typeValue = $comicDom->find('.stt span')[1];
-                $typeName  = null;
-                $typeId    = null;
-                if (strpos($typeValue, 'Chương') === false) {
-                    $typePosition = 1;
-                    $chapterPosition = 2;
-                    $viewPosition = 3;
-
-                    $typeName = $comicDom->find('.stt span')[$typePosition]->plaintext;
-                } else {
-                    $chapterPosition = 1;
-                    $viewPosition = 2;
-                }          
-                $numOfChap   = (int)str_replace(' Chương', '', $comicDom->find('.stt span')[$chapterPosition]->plaintext);
-                $numOfView   = (int)str_replace(' lượt đọc', '', $comicDom->find('.stt span')[$viewPosition]->plaintext);
-                $description = $comicDom->find('.contentt')[0]->plaintext;
-                $chapters    = $comicDom->find('.danh-sach-chuong .chuong-item');
-
-                // Add author data
-                $author   = new Authors;
-                $authorId = $author->getId($authorName);
-
-                if ($typeName !== null) {
-                    // Add type data
-                    $type   = new Types;
-                    $typeId = $type->getId($typeName);
+            $pageIndex               = null;
+            $dom                     = $this->execute('https://' . $url . '/the-loai' . $comicTypeItem->href);
+            $comicTypePageList   = [];
+            $comicTypePageList[] = '/the-loai' . $comicTypeItem->href;
+            $pageList = $dom->find('.pagination li a');
+            if ($pageList !== []) {
+                for($pageIndex = 0; $pageIndex < count($pageList) - 1; $pageIndex++) {
+                    $comicTypePageList[] =$pageList[$pageIndex]->href;
                 }
-                
-                // Add status type data
-                $statusType   = new StatusTypes;
-                $statusTypeId = $statusType->getId($statusTypeName);
-
-                // Add comic data
-                $comic = new Comics;
-                $comic->add($title, $comicTypeItem->href, $description, $numOfChap, $numOfView, $source, $img, $authorId, $typeId, $statusTypeId);
-                $comicId = $comic->getId($title);
-
-                // Add comic detail data
-                $comicType = new ComicTypes;
-                for($index = 0; $index < count($comic_type) / 2; $index++) {
-                    $comicTypeName = $comic_type[$index]->plaintext;
-                    $comicTypeId   = $comicType->getId($comicTypeName);
-
-                    $comicDetail = new ComicDetail;
-                    $comicDetail->add($comicId, $comicTypeId);
-                }
-                
-                // Add chapter data
-                foreach($chapters as $chapterItem) {
-                    $chapterName    = $chapterItem->plaintext;
-                    if (strpos($chapterName, 'Chương') || strpos($chapterName, 'chương')) {
-                        $chapterDom     = $this->execute('https://' . $url . $chapterItem->href);
-                        $chapterContent = $chapterDom->find('div[itemprop=articleBody]')[0]->plaintext;
-                        
-                        $chapter = new Chapters;
-                        $chapter->add($chapterName, $chapterContent, $comicId);         
-                    }                   
-                }              
             }
+
+            foreach($comicTypePageList as $comicTypePageItem) {
+                $pageDom = $this->execute('https://' . $url . $comicTypePageItem);
+
+                $comicList = $pageDom->find('.title');
+                foreach($comicList as $comicItem) {
+                    $comicDom      = $this->execute('https://' . $url . $comicItem->href);
+                    $index         = null;
+                    
+                    $title       = $comicDom->find('h1.title')[0]->plaintext;         
+                    $img         = $comicDom->find('.cover img')[0]->src;
+                    $authorName  = trim(str_replace('Tác giả:', '',$comicDom->find('a.list-group-item')[0]->plaintext));
+                    $comic_type = $comicDom->find('.list-group-item a span');      
+                    
+                    $sourceValue = $comicDom->find('span[itemprop=isBasedOnUrl]');
+                    $source      = $sourceValue !== [] ? $sourceValue[0]->plaintext : ''; 
+
+                    $statusTypeName = $comicDom->find('.stt span')[0]->plaintext;
+
+                    $typeValue = $comicDom->find('.stt span')[1];
+                    $typeName  = null;
+                    $typeId    = null;
+                    if (strpos($typeValue, 'Chương') === false) {
+                        $typePosition = 1;
+                        $chapterPosition = 2;
+                        $viewPosition = 3;
+
+                        $typeName = $comicDom->find('.stt span')[$typePosition]->plaintext;
+                    } else {
+                        $chapterPosition = 1;
+                        $viewPosition = 2;
+                    }          
+                    $numOfChap   = (int)str_replace(' Chương', '', $comicDom->find('.stt span')[$chapterPosition]->plaintext);
+                    $numOfView   = (int)str_replace(' lượt đọc', '', $comicDom->find('.stt span')[$viewPosition]->plaintext);
+                    $description = $comicDom->find('.contentt')[0]->plaintext;
+                    $chapters    = $comicDom->find('.danh-sach-chuong .chuong-item');
+
+                    // Add author data
+                    $author   = new Authors;
+                    $authorId = $author->getId($authorName);
+
+                    if ($typeName !== null) {
+                        // Add type data
+                        $type   = new Types;
+                        $typeId = $type->getId($typeName);
+                    }
+                    
+                    // Add status type data
+                    $statusType   = new StatusTypes;
+                    $statusTypeId = $statusType->getId($statusTypeName);
+
+                    // Add comic data
+                    $comic = new Comics;
+                    $comic->add($title, $comicTypeItem->href, $description, $numOfChap, $numOfView, $source, $img, $authorId, $typeId, $statusTypeId);
+                    $comicId = $comic->getId($title);
+
+                    // Add comic detail data
+                    $comicType = new ComicTypes;
+                    for($index = 0; $index < count($comic_type) / 2; $index++) {
+                        $comicTypeName = $comic_type[$index]->plaintext;
+                        $comicTypeId   = $comicType->getId($comicTypeName);
+
+                        $comicDetail = new ComicDetail;
+                        $comicDetail->add($comicId, $comicTypeId);
+                    }
+                    
+                    // Add chapter data
+                    foreach($chapters as $chapterItem) {
+                        $chapterName    = $chapterItem->plaintext;
+                        if (strpos($chapterName, 'Chương') !== false || strpos($chapterName, 'chương') !== false) {
+                            $chapterDom     = $this->execute('https://' . $url . $chapterItem->href);
+                            $chapterContent = $chapterDom->find('div[itemprop=articleBody]')[0]->plaintext;
+                            
+                            $chapter = new Chapters;
+                            $chapter->add($chapterName, $chapterContent, $comicId);         
+                        }                   
+                    }   
+                    break;          
+                }
+            }         
+            break;
         }
 
         echo 'Get comic data successfully!';
